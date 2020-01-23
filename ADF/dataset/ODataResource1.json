@@ -1,0 +1,16 @@
+{
+	"name": "ODataResource1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "OData2",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "ODataResource",
+		"schema": [],
+		"typeProperties": {
+			"path": "Documents"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

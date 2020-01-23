@@ -1,0 +1,216 @@
+{
+	"name": "Sharepoint Doc Library Extraction",
+	"properties": {
+		"activities": [
+			{
+				"name": "Web1",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://accounts.accesscontrol.windows.net/8105de03-60ee-4507-afdb-f3440093be3c/tokens/OAuth/2",
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/x-www-form-urlencoded"
+					},
+					"body": "grant_type=client_credentials&client_id=55aff777-da75-4856-89d9-1c5704d70e16@8105de03-60ee-4507-afdb-f3440093be3c&client_secret=gJ1F775lTQI/lq0N3zoE2D/1sEK/pUw7euVBObsBFGI=&resource=00000003-0000-0ff1-ce00-000000000000/chayanupadhyay.sharepoint.com@8105de03-60ee-4507-afdb-f3440093be3c"
+				}
+			},
+			{
+				"name": "Web1_copy1",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "Web1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://chayanupadhyay.sharepoint.com/sites/SampleSite/_api/web/GetFolderByServerRelativeUrl('Test/TestFolder')/Files",
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/x-www-form-urlencoded",
+						"Authorization": {
+							"value": "@concat('Bearer ',string(activity('Web1').output.access_token))",
+							"type": "Expression"
+						},
+						"accept": "application/json;odata=nometadata"
+					},
+					"body": "grant_type=client_credentials&client_id=55aff777-da75-4856-89d9-1c5704d70e16@8105de03-60ee-4507-afdb-f3440093be3c&client_secret=gJ1F775lTQI/lq0N3zoE2D/1sEK/pUw7euVBObsBFGI=&resource=00000003-0000-0ff1-ce00-000000000000/chayanupadhyay.sharepoint.com@8105de03-60ee-4507-afdb-f3440093be3c"
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Set variable1_copy1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@variables('fileCount')",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Set variable1_copy2",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "files",
+								"value": {
+									"value": "@activity('Web1_copy1').output.value[item()].Name",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Copy",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Set variable1_copy2",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "HttpReadSettings",
+										"requestMethod": "GET",
+										"additionalHeaders": {
+											"value": "@{variables('token')}",
+											"type": "Expression"
+										},
+										"requestTimeout": ""
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobStorageWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "DelimitedTextSource",
+									"type": "DatasetReference",
+									"parameters": {
+										"fileName": {
+											"value": "@variables('files')",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "FileCopySPtoBlob",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "Set variable1_copy3",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Web1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "token",
+					"value": {
+						"value": "@string(concat('Authorization:','Bearer ',string(activity('Web1').output.access_token)))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set variable1_copy1",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Web1_copy1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "fileCount",
+					"value": {
+						"value": "@range(0,length(activity('Web1_copy1').output.value))",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"variables": {
+			"files": {
+				"type": "String"
+			},
+			"fileCount": {
+				"type": "Array"
+			},
+			"token": {
+				"type": "String"
+			}
+		},
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

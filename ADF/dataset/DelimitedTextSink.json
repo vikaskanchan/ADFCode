@@ -1,0 +1,24 @@
+{
+	"name": "DelimitedTextSink",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStoreWriteSettings",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "ListLiberary",
+				"folderPath": "Sharepoint",
+				"fileSystem": "samplecontainer"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

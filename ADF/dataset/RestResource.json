@@ -1,0 +1,16 @@
+{
+	"name": "RestResource",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "RestService",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"typeProperties": {
+			"relativeUrl": "getbytitle('TestList')/items?$top=10"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

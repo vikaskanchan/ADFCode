@@ -1,0 +1,99 @@
+{
+	"name": "SharePoint",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Token",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://accounts.accesscontrol.windows.net/8105de03-60ee-4507-afdb-f3440093be3c/tokens/OAuth/2",
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/x-www-form-urlencoded"
+					},
+					"body": "grant_type=client_credentials&client_id=55aff777-da75-4856-89d9-1c5704d70e16@8105de03-60ee-4507-afdb-f3440093be3c&client_secret=gJ1F775lTQI/lq0N3zoE2D/1sEK/pUw7euVBObsBFGI=&resource=00000003-0000-0ff1-ce00-000000000000/chayanupadhyay.sharepoint.com@8105de03-60ee-4507-afdb-f3440093be3c",
+					"linkedServices": [
+						{
+							"referenceName": "RestService",
+							"type": "LinkedServiceReference"
+						}
+					],
+					"datasets": [
+						{
+							"referenceName": "RestResource",
+							"type": "DatasetReference"
+						}
+					]
+				}
+			},
+			{
+				"name": "Copy data",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Get Token",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "RestSource",
+						"httpRequestTimeout": "00:01:40",
+						"requestInterval": "00.00:00:00.010",
+						"requestMethod": "GET",
+						"additionalHeaders": {
+							"Authorization": {
+								"value": "@concat(string(activity('Get Token').output.token_type),' ',string(activity('Get Token').output.access_token))",
+								"type": "Expression"
+							}
+						}
+					},
+					"sink": {
+						"type": "JsonSink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings"
+						},
+						"formatSettings": {
+							"type": "JsonWriteSettings",
+							"quoteAllText": true
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "RestResource",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "Json1",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
